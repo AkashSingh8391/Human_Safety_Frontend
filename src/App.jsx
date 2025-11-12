@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import CivilDashboard from "./pages/CivilDashboard";
 import PoliceDashboard from "./pages/PoliceDashboard";
 
+
 function App() {
   return (
     <Routes>
