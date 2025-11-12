@@ -1,38 +1,53 @@
-import React, { useState, useContext } from "react";
-import API from "../api/axios";
-import { AuthContext } from "../context/AuthContext";
+import React, { useState } from "react";
+import api, { setAuthToken } from "../services/api";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
-toast.configure();
-
-export const Login = () => {
-  const { loginUser } = useContext(AuthContext);
+export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("CIVIL"); // CIVIL or POLICE
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     try {
-      const res = await API.post("/api/auth/login", { username, password });
-      loginUser(res.data.token, res.data.user);
-      if (res.data.user.role === "CIVIL") navigate("/civil");
+      const res = await api.post("/auth/login", { username, password });
+      const token = res.data.token;
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      setAuthToken(token);
+      if (role === "CIVIL") navigate("/civil");
       else navigate("/police");
     } catch (err) {
-      toast.error("Invalid Credentials");
+      alert("Login failed");
+    }
+  };
+
+  const handleRegister = async () => {
+    try {
+      await api.post("/auth/register", { username, password, role });
+      alert("Registered. Now login.");
+    } catch (err) {
+      alert("Register failed");
     }
   };
 
   return (
-    <div className="login-container">
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button type="submit">Login</button>
-      </form>
+    <div style={{ padding: 20 }}>
+      <h2>Human Safety - Login / Register</h2>
+      <div>
+        <input placeholder="username" value={username} onChange={e=>setUsername(e.target.value)} />
+      </div>
+      <div>
+        <input placeholder="password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
+      </div>
+      <div>
+        <select value={role} onChange={e=>setRole(e.target.value)}>
+          <option value="CIVIL">Civil</option>
+          <option value="POLICE">Police</option>
+        </select>
+      </div>
+      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleRegister}>Register</button>
     </div>
   );
-};
+}
