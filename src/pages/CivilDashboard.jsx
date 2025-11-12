@@ -1,48 +1,60 @@
-import React, { useState, useEffect, useContext } from "react";
-import API from "../api/axios";
-import { AuthContext } from "../context/AuthContext";
-import { Map } from "../components/Map";
-import { toast } from "react-toastify";
+import React, { useEffect, useState } from "react";
+import api, { setAuthToken } from "../services/api";
+import MapTracker from "../components/MapTracker";
 
-export const CivilDashboard = () => {
-  const { user } = useContext(AuthContext);
-  const [locations, setLocations] = useState([]);
-  const [message, setMessage] = useState("");
-
-  const sendSOS = async () => {
-    if (!navigator.geolocation) return alert("Geolocation not supported");
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const alertData = {
-        message,
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      };
-      try {
-        await API.post("/api/alert/sos", alertData, { headers: { username: user.username } });
-        toast.success("SOS Alert Sent!");
-        setMessage("");
-        setLocations((prev) => [...prev, alertData]);
-      } catch (err) {
-        toast.error("Failed to send SOS");
-      }
-    });
-  };
+export default function CivilDashboard() {
+  const [currentPos, setCurrentPos] = useState(null);
+  const [alertId, setAlertId] = useState(null);
+  const [positions, setPositions] = useState([]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        setLocations((prev) => [...prev, { latitude: pos.coords.latitude, longitude: pos.coords.longitude }]);
-      });
-    }, 5000);
-    return () => clearInterval(interval);
+    const token = localStorage.getItem("token");
+    if (token) setAuthToken(token);
   }, []);
 
+  // get browser location once and every 5 seconds push to server (if alert active)
+  useEffect(() => {
+    let interval;
+    if (alertId) {
+      interval = setInterval(sendLocation, 5000);
+    }
+    return ()=>clearInterval(interval);
+  }, [alertId]);
+
+  const sendLocation = () => {
+    if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setCurrentPos({ lat, lng });
+      setPositions(prev => [...prev, [lat, lng]]);
+      try {
+        if (!alertId) {
+          // create alert
+          const res = await api.post("/alert/sos", {
+            userId: 0, // backend can map user by token; simplified here
+            message: "SOS! Please help",
+            latitude: lat,
+            longitude: lng
+          });
+          setAlertId(res.data.alertId);
+          // store alert id for updates
+        } else {
+          // update existing alert location (simulate progression)
+          await api.post(`/alert/update/${alertId}`, { latitude: lat, longitude: lng });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, (err) => console.error(err), { enableHighAccuracy: true });
+  };
+
   return (
-    <div>
+    <div style={{ padding: 20 }}>
       <h2>Civil Dashboard</h2>
-      <input placeholder="Enter SOS Message" value={message} onChange={(e) => setMessage(e.target.value)} />
-      <button onClick={sendSOS}>Send SOS</button>
-      <Map locations={locations} />
+      <button onClick={sendLocation} className="sos-btn">🚨 Send SOS Now</button>
+      <p>Alert ID: {alertId || "No active alert"}</p>
+      <MapTracker positions={positions} />
     </div>
   );
-};
+}
