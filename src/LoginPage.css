@@ -1,0 +1,112 @@
+/* FULL SCREEN ANIMATED GRADIENT BACKGROUND */
+.login-bg {
+  height: 100vh;
+  width: 100%;
+  background: linear-gradient(-45deg, #3a0ca3, #7209b7, #f72585, #4361ee);
+  background-size: 400% 400%;
+  animation: gradientMove 10s ease infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* LOGIN CARD (Glassmorphism) */
+.login-card {
+  width: 380px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  padding: 35px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  text-align: center;
+  box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* TITLE */
+.login-title {
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+/* INPUT BOXES */
+.input-box input {
+  width: 100%;
+  padding: 12px;
+  margin: 12px 0;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.22);
+  color: white;
+  transition: 0.3s;
+}
+
+.input-box input::placeholder {
+  color: #ddd;
+}
+
+.input-box input:focus {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* ROLE SELECT BOX */
+.role-box {
+  margin-top: 15px;
+  text-align: left;
+}
+
+.role-box label {
+  font-size: 0.9rem;
+}
+
+.role-box select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 5px;
+  border: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.22);
+  color: white;
+}
+
+/* BUTTON */
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: #ff006e;
+  border: none;
+  color: white;
+  margin-top: 20px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-primary:hover {
+  background: #ff2e8b;
+}
+
+/* TOGGLE TEXT */
+.toggle-text {
+  margin-top: 15px;
+  font-size: 0.9rem;
+}
+
+.toggle-text span {
+  color: #ffd6ff;
+  cursor: pointer;
+  margin-left: 5px;
+  text-decoration: underline;
+}
