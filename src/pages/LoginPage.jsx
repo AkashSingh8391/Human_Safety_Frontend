@@ -1,53 +1,94 @@
 import React, { useState } from "react";
 import api, { setAuthToken } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import "./LoginPage.css"; // <-- IMPORTANT
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("CIVIL"); // CIVIL or POLICE
+  const [role, setRole] = useState("CIVIL");
+  const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleAuth = async () => {
     try {
-      const res = await api.post("/auth/login", { username, password });
-      const token = res.data.token;
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      setAuthToken(token);
-      if (role === "CIVIL") navigate("/civil");
-      else navigate("/police");
-    } catch (err) {
-      alert("Login failed");
-    }
-  };
+      if (isLogin) {
+        const res = await api.post("/auth/login", { username, password });
+        const token = res.data.token;
 
-  const handleRegister = async () => {
-    try {
-      await api.post("/auth/register", { username, password, role });
-      alert("Registered. Now login.");
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", role);
+        setAuthToken(token);
+
+        if (role === "CIVIL") navigate("/civil");
+        else navigate("/police");
+      } else {
+        await api.post("/auth/register", { username, password, role });
+        alert("✔ Registration successful! Please Login.");
+        setIsLogin(true);
+      }
     } catch (err) {
-      alert("Register failed");
+      alert("❌ Authentication failed. Try again.");
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Human Safety - Login / Register</h2>
-      <div>
-        <input placeholder="username" value={username} onChange={e=>setUsername(e.target.value)} />
+    <div className="login-bg">
+      <div className="login-card">
+        
+        <h2 className="login-title">
+          {isLogin ? "Login to Human Safety System" : "Create Your Account"}
+        </h2>
+
+        <div className="input-box">
+          <input
+            type="text"
+            placeholder="Enter username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </div>
+
+        <div className="input-box">
+          <input
+            type="password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        {/* Select Role */}
+        <div className="role-box">
+          <label>Select Role:</label>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="CIVIL">Civil 👩‍🦰</option>
+            <option value="POLICE">Police 👮‍♂️</option>
+          </select>
+        </div>
+
+        <button className="btn-primary" onClick={handleAuth}>
+          {isLogin ? "Login" : "Register"}
+        </button>
+
+        {/* Toggle login / register */}
+        <p className="toggle-text">
+          {isLogin ? (
+            <>
+              New user?
+              <span onClick={() => setIsLogin(false)}> Register here</span>
+            </>
+          ) : (
+            <>
+              Already have an account?
+              <span onClick={() => setIsLogin(true)}> Login now</span>
+            </>
+          )}
+        </p>
       </div>
-      <div>
-        <input placeholder="password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-      </div>
-      <div>
-        <select value={role} onChange={e=>setRole(e.target.value)}>
-          <option value="CIVIL">Civil</option>
-          <option value="POLICE">Police</option>
-        </select>
-      </div>
-      <button onClick={handleLogin}>Login</button>
-      <button onClick={handleRegister}>Register</button>
     </div>
   );
 }
