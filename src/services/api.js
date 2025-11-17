@@ -1,14 +1,4 @@
-import axios from "axios";
-
-const API_BASE = "http://localhost:8080/api";
-
-const instance = axios.create({
-  baseURL: API_BASE,
-});
-
-export function setAuthToken(token) {
-  if (token) instance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  else delete instance.defaults.headers.common["Authorization"];
-}
-
-export default instance;
+// services/api.js (example)
+import axios from 'axios';
+const api = axios.create({ baseURL: 'http://localhost:8080/api' });
+export default api;
