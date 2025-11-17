@@ -10,27 +10,32 @@ export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
 
-  const handleAuth = async () => {
-    try {
-      if (isLogin) {
-        const res = await api.post("/auth/login", { username, password });
-        const token = res.data.token;
+  // Login handler
+const handleLogin = async () => {
+  try {
+    const res = await api.post("/auth/login", {
+      username,
+      password,
+      role   // CIVIL / POLICE
+    });
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
-        setAuthToken(token);
+    const token = res.data.token;
 
-        if (role === "CIVIL") navigate("/civil");
-        else navigate("/police");
-      } else {
-        await api.post("/auth/register", { username, password, role });
-        alert("✔ Registration successful! Please Login.");
-        setIsLogin(true);
-      }
-    } catch (err) {
-      alert("❌ Authentication failed. Try again.");
-    }
-  };
+    // Save token & role
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+
+    // Apply token globally to axios
+    setAuthToken(token);
+
+    // Redirect based on role
+    if (role === "POLICE") navigate("/police");
+    else navigate("/civil");
+
+  } catch (err) {
+    alert(err.response?.data || "Login failed");
+  }
+};
 
   return (
     <div className="login-bg">
