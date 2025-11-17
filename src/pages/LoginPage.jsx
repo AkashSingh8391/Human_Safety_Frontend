@@ -1,99 +1,120 @@
 import React, { useState } from "react";
-import api, { setAuthToken } from "../services/api";
 import { useNavigate } from "react-router-dom";
-import "./LoginPage.css"; // <-- IMPORTANT
+import api, { setAuthToken } from "../services/api";
 
-export default function LoginPage() {
+const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("CIVIL");
-  const [isLogin, setIsLogin] = useState(true);
+  const [role, setRole] = useState(""); // CIVIL or POLICE
+
   const navigate = useNavigate();
 
-  // Login handler
-const handleLogin = async () => {
-  try {
-    const res = await api.post("/auth/login", {
-      username,
-      password,
-      role   // CIVIL / POLICE
-    });
+  // ------------------------------
+  //  LOGIN FUNCTION
+  // ------------------------------
+  const login = async () => {
+    if (!role) {
+      alert("Please select role: CIVIL or POLICE");
+      return;
+    }
 
-    const token = res.data.token;
+    try {
+      const res = await api.post("/auth/login", {
+        username,
+        password,
+      });
 
-    // Save token & role
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
+      const token = res.data.token;
 
-    // Apply token globally to axios
-    setAuthToken(token);
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
 
-    // Redirect based on role
-    if (role === "POLICE") navigate("/police");
-    else navigate("/civil");
+      setAuthToken(token);
 
-  } catch (err) {
-    alert(err.response?.data || "Login failed");
-  }
-};
+      // Navigate based on role  
+      if (role === "POLICE") navigate("/police");
+      else navigate("/civil");
+
+    } catch (err) {
+      alert(err.response?.data || "Login failed");
+    }
+  };
+
+  // ------------------------------
+  //  REGISTER FUNCTION
+  // ------------------------------
+  const register = async () => {
+    if (!role) {
+      alert("Select a role before Register!");
+      return;
+    }
+
+    try {
+      await api.post("/auth/register", {
+        username,
+        password,
+        role,
+      });
+
+      alert("Registered successfully! Now login.");
+
+    } catch (err) {
+      alert(err.response?.data || "Register failed");
+    }
+  };
 
   return (
-    <div className="login-bg">
-      <div className="login-card">
-        
-        <h2 className="login-title">
-          {isLogin ? "Login to Human Safety System" : "Create Your Account"}
-        </h2>
+    <div style={{ padding: 20, width: "400px" }}>
+      <h2>Login / Register</h2>
 
-        <div className="input-box">
-          <input
-            type="text"
-            placeholder="Enter username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
+      <input
+        type="text"
+        placeholder="Enter username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        style={{ width: "100%", padding: 8, marginBottom: 10 }}
+      />
 
-        <div className="input-box">
-          <input
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+      <input
+        type="password"
+        placeholder="Enter password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        style={{ width: "100%", padding: 8, marginBottom: 10 }}
+      />
 
-        {/* Select Role */}
-        <div className="role-box">
-          <label>Select Role:</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="CIVIL">Civil 👩‍🦰</option>
-            <option value="POLICE">Police 👮‍♂️</option>
-          </select>
-        </div>
+      <select
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+        style={{ width: "100%", padding: 8, marginBottom: 10 }}
+      >
+        <option value="">Select Role</option>
+        <option value="CIVIL">Civil</option>
+        <option value="POLICE">Police</option>
+      </select>
 
-        <button className="btn-primary" onClick={handleAuth}>
-          {isLogin ? "Login" : "Register"}
-        </button>
+      <button
+        onClick={login}
+        style={{
+          padding: "10px 20px",
+          marginRight: 10,
+          background: "lightgreen",
+        }}
+      >
+        Login
+      </button>
 
-        {/* Toggle login / register */}
-        <p className="toggle-text">
-          {isLogin ? (
-            <>
-              New user?
-              <span onClick={() => setIsLogin(false)}> Register here</span>
-            </>
-          ) : (
-            <>
-              Already have an account?
-              <span onClick={() => setIsLogin(true)}> Login now</span>
-            </>
-          )}
-        </p>
-      </div>
+      <button
+        onClick={register}
+        style={{
+          padding: "10px 20px",
+          background: "lightblue",
+        }}
+      >
+        Register
+      </button>
     </div>
   );
-}
+};
+
+export default LoginPage;
