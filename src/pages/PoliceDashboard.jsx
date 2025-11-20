@@ -1,78 +1,66 @@
 import React, { useEffect, useState } from "react";
+import { connect, subscribeToAlerts, subscribeToAlert, disconnect } from "../services/socket";
 import api from "../services/api";
-import MapTracker from "../components/MapTracker";
 
-export default function PoliceDashboard(){
+export default function PoliceDashboard() {
   const [alerts, setAlerts] = useState([]);
-  const [selectedAlert, setSelectedAlert] = useState(null);
-  const [positions, setPositions] = useState([]);
+  const [trackingAlert, setTrackingAlert] = useState(null);
 
   useEffect(() => {
-    fetchAlerts();
-    const interval = setInterval(fetchAlerts, 5000);
-    return ()=>clearInterval(interval);
+    // initial fetch of active alerts
+    api.get("/alert/active").then(res => setAlerts(res.data)).catch(()=>{});
+
+    // connect websocket
+    connect(() => {
+      // onConnected: subscribe general topic
+      subscribeToAlerts((alert) => {
+        // update alerts list: add or update existing
+        setAlerts(prev => {
+          const found = prev.find(a => a.alertId === alert.alertId);
+          if (found) {
+            return prev.map(a => a.alertId === alert.alertId ? alert : a);
+          } else {
+            return [alert, ...prev];
+          }
+        });
+      });
+    });
+
+    return () => {
+      disconnect();
+    };
   }, []);
 
-  useEffect(() => {
-    let poll;
-    if (selectedAlert) {
-      fetchTrack();
-      poll = setInterval(fetchTrack, 3000);
-    }
-    return ()=>clearInterval(poll);
-  }, [selectedAlert]);
-
-  const fetchAlerts = async () => {
-    try {
-      const res = await api.get("/alert/active");
-      setAlerts(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchTrack = async () => {
-    try {
-      const res = await api.get(`/alert/track/${selectedAlert.alertId}`);
-      if (res.data) {
-        const lat = res.data.latitude;
-        const lng = res.data.longitude;
-        setPositions(prev => [...prev, [lat, lng]]);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const resolveAlert = async (id) => {
-    await api.put(`/alert/resolve/${id}`);
-    setSelectedAlert(null);
-    setPositions([]);
-    fetchAlerts();
+  // when police clicks Track on an alert:
+  const startTracking = (alert) => {
+    setTrackingAlert(alert);
+    // subscribe to specific alert updates
+    subscribeToAlert(alert.alertId, (updated) => {
+      setTrackingAlert(updated);
+      // also update list
+      setAlerts(prev => prev.map(a => a.alertId === updated.alertId ? updated : a));
+    });
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Police Dashboard</h2>
-      <div style={{ display: 'flex', gap: 20 }}>
-        <div style={{ width: '30%' }}>
-          <h3>Active Alerts</h3>
-          {alerts.map(a => (
-            <div key={a.alertId} style={{ border: '1px solid #ccc', padding: 8, marginBottom: 8 }}>
-              <div><b>ID:</b> {a.alertId}</div>
-              <div><b>Msg:</b> {a.message}</div>
-              <div><b>Time:</b> {new Date(a.timestamp).toLocaleString()}</div>
-              <button onClick={() => { setSelectedAlert(a); setPositions([[a.latitude, a.longitude]]) }}>Track</button>
-              <button onClick={() => resolveAlert(a.alertId)}>Resolve</button>
-            </div>
-          ))}
-        </div>
+    <div>
+      <h3>Active Alerts</h3>
+      <ul>
+        {alerts.map(a => (
+          <li key={a.alertId}>
+            {a.message} — {a.latitude},{a.longitude}
+            <button onClick={() => startTracking(a)}>Track</button>
+          </li>
+        ))}
+      </ul>
 
-        <div style={{ flex: 1 }}>
-          <h3>Tracking Map</h3>
-          <MapTracker positions={positions} />
+      {trackingAlert && (
+        <div>
+          <h4>Tracking Alert: {trackingAlert.alertId}</h4>
+          <p>Location: {trackingAlert.latitude},{trackingAlert.longitude}</p>
+          {/* Render map here and update marker by trackingAlert.latitude/longitude */}
         </div>
-      </div>
+      )}
     </div>
-  )
+  );
 }
