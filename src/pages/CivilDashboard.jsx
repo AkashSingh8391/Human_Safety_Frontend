@@ -1,44 +1,35 @@
 import React, { useEffect, useState } from "react";
 import api, { setAuthToken } from "../services/api";
 import MapTracker from "../components/MapTracker";
-
-// OPTIONAL (if you want Civil to send location via WebSocket ALSO)
-// import { connect, disconnect, publishLocationUpdate } from "../services/socket";
+import { connectWS, sendLocationWS } from "../services/ws";
 
 export default function CivilDashboard() {
   const [currentPos, setCurrentPos] = useState(null);
   const [alertId, setAlertId] = useState(null);
   const [positions, setPositions] = useState([]);
 
-  // Load token on mount
+  // Load token and connect WebSocket on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) setAuthToken(token);
 
-    // OPTIONAL — connect WebSocket
-    // connect(() => console.log("Civil WS Connected"));
+    connectWS();  // <-- REAL-TIME WS CONNECTION
 
-    return () => {
-      // OPTIONAL — cleanup WS
-      // disconnect();
-    };
   }, []);
 
-  // Auto-send location every 5 seconds when alertId is created
+  // Auto-send real-time location every 5 seconds after SOS
   useEffect(() => {
     let interval;
 
     if (alertId) {
-      interval = setInterval(() => {
-        sendLocation(false); // false = do not create new alert
-      }, 5000);
+      interval = setInterval(() => sendLocation(false), 5000);
     }
 
     return () => clearInterval(interval);
   }, [alertId]);
 
-  // Single function to create SOS + update location
-  const sendLocation = async (forceCreate = true) => {
+  // SEND SOS + UPDATE LOCATION
+  const sendLocation = async (firstTime = true) => {
     if (!navigator.geolocation) {
       alert("Geolocation not supported");
       return;
@@ -53,30 +44,31 @@ export default function CivilDashboard() {
         setPositions((prev) => [...prev, [lat, lng]]);
 
         try {
-          // 1) If no alert exists → CREATE alert
-          if (!alertId && forceCreate) {
+          // 1) Create SOS alert first time
+          if (!alertId && firstTime) {
             const res = await api.post("/alert/sos", {
-              userId: 1, // you can replace with logged-in user ID
+              userId: 1,
               message: "SOS! Please help",
               latitude: lat,
               longitude: lng,
             });
 
-            setAlertId(res.data.alertId);
+            setAlertId(res.data.id || res.data.alertId);
           }
 
-          // 2) If alert exists → UPDATE location
+          // 2) Update existing alert location in backend
           if (alertId) {
             await api.post(`/alert/update/${alertId}`, {
               latitude: lat,
               longitude: lng,
             });
-
-            // OPTIONAL — also publish via WebSocket
-            // publishLocationUpdate(alertId, lat, lng);
           }
+
+          // 3) SEND in REAL-TIME to Police via WebSocket
+          sendLocationWS(alertId, lat, lng);
+
         } catch (err) {
-          console.error("SOS error:", err);
+          console.error("Location update failed:", err);
         }
       },
       (err) => console.error(err),
@@ -90,15 +82,13 @@ export default function CivilDashboard() {
 
       <button
         onClick={() => sendLocation(true)}
-        className="sos-btn"
         style={{
-          padding: "10px 20px",
+          padding: "12px 20px",
           background: "red",
           color: "white",
-          border: "none",
-          cursor: "pointer",
           borderRadius: "8px",
-          fontSize: "16px",
+          fontSize: "18px",
+          cursor: "pointer",
         }}
       >
         🚨 Send SOS Now
