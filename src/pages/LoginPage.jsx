@@ -1,120 +1,43 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api, { setAuthToken } from "../services/api";
+import api from "../services/api";
 
-const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState(""); // CIVIL or POLICE
-
+export default function LoginPage() {
+  const [username,setUsername]=useState("");
+  const [password,setPassword]=useState("");
+  const [phoneNo,setPhoneNo]=useState("");
+  const [email,setEmail]=useState("");
   const navigate = useNavigate();
 
-  // ------------------------------
-  //  LOGIN FUNCTION
-  // ------------------------------
-  const login = async () => {
-    if (!role) {
-      alert("Please select role: CIVIL or POLICE");
-      return;
-    }
-
+  const register = async () => {
     try {
-      const res = await api.post("/auth/login", {
-        username,
-        password,
-      });
-
-      const token = res.data.token;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-
-      setAuthToken(token);
-
-      // Navigate based on role  
-      if (role === "POLICE") navigate("/police");
-      else navigate("/civil");
-
-    } catch (err) {
-      alert(err.response?.data || "Login failed");
-    }
+      await api.post("/auth/register", { username, password, phoneNo, email });
+      alert("Registered. Now login.");
+    } catch (e) { alert(e.response?.data || e.message); }
   };
 
-  // ------------------------------
-  //  REGISTER FUNCTION
-  // ------------------------------
-  const register = async () => {
-    if (!role) {
-      alert("Select a role before Register!");
-      return;
-    }
-
+  const login = async () => {
     try {
-      await api.post("/auth/register", {
-        username,
-        password,
-        role,
-      });
-
-      alert("Registered successfully! Now login.");
-
-    } catch (err) {
-      alert(err.response?.data || "Register failed");
-    }
+      const res = await api.post("/auth/login", { username, password });
+      const token = res.data.token;
+      localStorage.setItem("token", token);
+      localStorage.setItem("phoneNo", phoneNo);
+      localStorage.setItem("email", email);
+      navigate("/civil");
+    } catch (e) { alert(e.response?.data || e.message); }
   };
 
   return (
-    <div style={{ padding: 20, width: "400px" }}>
-      <h2>Login / Register</h2>
-
-      <input
-        type="text"
-        placeholder="Enter username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        style={{ width: "100%", padding: 8, marginBottom: 10 }}
-      />
-
-      <input
-        type="password"
-        placeholder="Enter password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{ width: "100%", padding: 8, marginBottom: 10 }}
-      />
-
-      <select
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-        style={{ width: "100%", padding: 8, marginBottom: 10 }}
-      >
-        <option value="">Select Role</option>
-        <option value="CIVIL">Civil</option>
-        <option value="POLICE">Police</option>
-      </select>
-
-      <button
-        onClick={login}
-        style={{
-          padding: "10px 20px",
-          marginRight: 10,
-          background: "lightgreen",
-        }}
-      >
-        Login
-      </button>
-
-      <button
-        onClick={register}
-        style={{
-          padding: "10px 20px",
-          background: "lightblue",
-        }}
-      >
-        Register
-      </button>
+    <div style={{ padding: 20, maxWidth: 420, margin: "auto" }}>
+      <h2>Register / Login</h2>
+      <input placeholder="username" value={username} onChange={e=>setUsername(e.target.value)} />
+      <input placeholder="password" value={password} type="password" onChange={e=>setPassword(e.target.value)} />
+      <input placeholder="phone (for SMS/demo)" value={phoneNo} onChange={e=>setPhoneNo(e.target.value)} />
+      <input placeholder="email (for SOS email)" value={email} onChange={e=>setEmail(e.target.value)} />
+      <div style={{marginTop:10}}>
+        <button onClick={register}>Register</button>
+        <button onClick={login} style={{marginLeft:10}}>Login</button>
+      </div>
     </div>
   );
-};
-
-export default LoginPage;
+}
