@@ -1,103 +1,68 @@
-import React, { useEffect, useState } from "react";
-import api, { setAuthToken } from "../services/api";
+import React, { useEffect, useState, useRef } from "react";
+import api from "../services/api";
 import MapTracker from "../components/MapTracker";
-import { connectWS, sendLocationWS } from "../services/ws";
 
-export default function CivilDashboard() {
-  const [currentPos, setCurrentPos] = useState(null);
+export default function CivilDashboard(){
+  const [positions, setPositions] = useState([]); // [ [lat,lng], ... ]
   const [alertId, setAlertId] = useState(null);
-  const [positions, setPositions] = useState([]);
+  const pollingRef = useRef(null);
 
-  // Load token and connect WebSocket on mount
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) setAuthToken(token);
-
-    connectWS();  // <-- REAL-TIME WS CONNECTION
-
-  }, []);
-
-  // Auto-send real-time location every 5 seconds after SOS
-  useEffect(() => {
-    let interval;
-
-    if (alertId) {
-      interval = setInterval(() => sendLocation(false), 5000);
+  useEffect(()=> {
+    return ()=> {
+      if (pollingRef.current) clearInterval(pollingRef.current);
     }
+  },[]);
 
-    return () => clearInterval(interval);
-  }, [alertId]);
+  const sendSosOnce = () => {
+    if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setPositions(prev => [...prev, [lat, lng]]);
+      try {
+        const userId = null; // optional: if you saved userId after login
+        const res = await api.post("/alert/sos", {
+          userId: userId,
+          message: "I am in trouble. Please help!",
+          latitude: lat,
+          longitude: lng
+        });
+        const id = res.data.alertId || res.data.id;
+        setAlertId(id);
 
-  // SEND SOS + UPDATE LOCATION
-  const sendLocation = async (firstTime = true) => {
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
-      return;
-    }
+        pollingRef.current = setInterval(() => updateLocation(id), 5000);
+      } catch (e) {
+        console.error(e);
+        alert("SOS failed");
+      }
+    }, (err)=> { console.error(err); alert("Location permission required");}, { enableHighAccuracy: true });
+  };
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
+  const updateLocation = async (id) => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setPositions(prev => [...prev, [lat, lng]]);
+      try {
+        await api.post(`/alert/update/${id}`, { latitude: lat, longitude: lng });
+      } catch (e) {
+        console.error("update failed:", e);
+      }
+    }, (err)=> console.error(err), { enableHighAccuracy:true });
+  };
 
-        setCurrentPos({ lat, lng });
-        setPositions((prev) => [...prev, [lat, lng]]);
-
-        try {
-          // 1) Create SOS alert first time
-          if (!alertId && firstTime) {
-            const res = await api.post("/alert/sos", {
-              userId: 1,
-              message: "SOS! Please help",
-              latitude: lat,
-              longitude: lng,
-            });
-
-            setAlertId(res.data.id || res.data.alertId);
-          }
-
-          // 2) Update existing alert location in backend
-          if (alertId) {
-            await api.post(`/alert/update/${alertId}`, {
-              latitude: lat,
-              longitude: lng,
-            });
-          }
-
-          // 3) SEND in REAL-TIME to Police via WebSocket
-          sendLocationWS(alertId, lat, lng);
-
-        } catch (err) {
-          console.error("Location update failed:", err);
-        }
-      },
-      (err) => console.error(err),
-      { enableHighAccuracy: true }
-    );
+  const stopSos = async () => {
+    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+    setAlertId(null);
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Civil Dashboard</h2>
-
-      <button
-        onClick={() => sendLocation(true)}
-        style={{
-          padding: "12px 20px",
-          background: "red",
-          color: "white",
-          borderRadius: "8px",
-          fontSize: "18px",
-          cursor: "pointer",
-        }}
-      >
-        🚨 Send SOS Now
-      </button>
-
-      <p>
-        <b>Alert ID:</b> {alertId || "No active alert"}
-      </p>
-
+    <div style={{ padding:20 }}>
+      <h2>Civil Dashboard - SOS</h2>
+      <button onClick={sendSosOnce} style={{background:"red", color:"white", padding:10}}>🚨 Send SOS</button>
+      <button onClick={stopSos} style={{marginLeft:10}}>Stop</button>
+      <p>Alert: {alertId ? alertId : "No active alert"}</p>
       <MapTracker positions={positions} />
     </div>
   );
