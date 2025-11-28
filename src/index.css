@@ -1,2 +1,4 @@
 body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
 .sos-btn { background:#e53935; color:white; padding:10px 16px; border:none; border-radius:6px; cursor:pointer; }
+input, select { display:block; margin:8px 0; padding:8px; width:100%; box-sizing:border-box; }
+button { padding:8px 12px; cursor:pointer; }
