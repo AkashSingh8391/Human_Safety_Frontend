@@ -13,8 +13,9 @@ export default function CivilDashboard(){
     // fetch current user id by username
     (async ()=> {
       try {
-        const res = await api.get("/auth/me"); // implement below
+        const res = await api.get("/auth/me");
         setUserId(res.data.userId);
+
       } catch(e) { console.error(e); }
     })();
   },[]);
