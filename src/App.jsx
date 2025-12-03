@@ -1,18 +1,26 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
-import CivilDashboard from "./pages/CivilDashboard";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import Dashboard from "./components/Dashboard";
+import Contacts from "./components/Contacts";
 import TrackPage from "./components/TrackPage";
 
-function App() {
+export default function App() {
+  const isLoggedIn = !!localStorage.getItem("token");
+
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/civil" element={<CivilDashboard />} />
-      <Route path="/track" element={<TrackPage />} />   {/* ADDED */}
-    </Routes>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/contacts" element={isLoggedIn ? <Contacts /> : <Navigate to="/login" />} />
+
+        {/* Tracking Page for SOS */}
+        <Route path="/track" element={<TrackPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;
