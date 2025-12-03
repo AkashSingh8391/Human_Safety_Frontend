@@ -1,4 +1,37 @@
-body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-.sos-btn { background:#e53935; color:white; padding:10px 16px; border:none; border-radius:6px; cursor:pointer; }
-input, select { display:block; margin:8px 0; padding:8px; width:100%; box-sizing:border-box; }
-button { padding:8px 12px; cursor:pointer; }
+body {
+  font-family: Arial;
+  background: #f0f0f0;
+  padding: 20px;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 350px;
+  margin: auto;
+  margin-top: 40px;
+  box-shadow: 0 0 10px #ccc;
+}
+
+input, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+button {
+  cursor: pointer;
+  background: #333;
+  color: white;
+  border: none;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+li {
+  margin-top: 5px;
+  list-style: none;
+}
