@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
-// Fix default marker icon paths
+delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -19,9 +18,7 @@ export default function TrackPage() {
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setMyPos([pos.coords.latitude, pos.coords.longitude]);
-      },
+      (pos) => setMyPos([pos.coords.latitude, pos.coords.longitude]),
       (err) => console.log("GPS Error:", err),
       { enableHighAccuracy: true }
     );
@@ -34,25 +31,17 @@ export default function TrackPage() {
       <MapContainer center={center} zoom={14} style={{ height: "100%", width: "100%" }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {/* SOS sender location */}
         <Marker position={[sosLat, sosLng]}>
-          <Popup><strong>SOS Location</strong></Popup>
+          <Popup><b>SOS Location</b></Popup>
         </Marker>
 
-        {/* Viewer mobile location */}
         {myPos && (
           <Marker position={myPos}>
-            <Popup><strong>Your Current Location</strong></Popup>
+            <Popup><b>Your Live Location</b></Popup>
           </Marker>
         )}
 
-        {/* Draw a line only if viewer location is available */}
-        {myPos && (
-          <Polyline positions={[
-            [sosLat, sosLng],
-            myPos
-          ]} />
-        )}
+        {myPos && <Polyline positions={[[sosLat, sosLng], myPos]]} />}
       </MapContainer>
     </div>
   );
