@@ -1,23 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    api.get("/auth/me").then((res) => setUserId(res.data.userId));
+  }, []);
 
   async function sendSOS() {
-    if (!navigator.geolocation) return alert("Location not supported");
+    if (!userId) return alert("User not loaded yet!");
 
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const alertData = {
-        userId: 1, // Replace with JWT decoded user ID from /auth/me
+        userId,
         message: "Emergency! I need help!",
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude
       };
 
-      const res = await api.post("/alert/sos", alertData);
-
+      await api.post("/alert/sos", alertData);
       alert("SOS Sent Successfully!");
     });
   }
@@ -26,9 +30,12 @@ export default function Dashboard() {
     <div className="container">
       <h1>Dashboard</h1>
 
-      <button onClick={() => navigate("/contacts")}>Manage Emergency Contacts</button>
+      <button onClick={() => navigate("/contacts")}>Manage Contacts</button>
 
-      <button onClick={sendSOS} style={{ marginTop: "20px", background: "red", color: "white" }}>
+      <button
+        onClick={sendSOS}
+        style={{ marginTop: "20px", background: "red", color: "white" }}
+      >
         SEND SOS
       </button>
 
@@ -37,7 +44,7 @@ export default function Dashboard() {
           localStorage.removeItem("token");
           navigate("/login");
         }}
-        style={{ marginTop: "20px" }}>
+      >
         Logout
       </button>
     </div>
