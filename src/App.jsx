@@ -11,14 +11,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
+        <Route path="/" element={isLoggedIn ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
         <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/contacts" element={isLoggedIn ? <Contacts /> : <Navigate to="/login" />} />
-
-        {/* Tracking Page for SOS */}
         <Route path="/track" element={<TrackPage />} />
       </Routes>
     </BrowserRouter>

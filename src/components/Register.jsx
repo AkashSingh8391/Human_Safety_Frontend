@@ -13,7 +13,8 @@ export default function Register() {
       await api.post("/auth/register", { email, password });
       alert("Registered! Please login.");
       navigate("/login");
-    } catch {
+    } catch (err) {
+      console.error(err);
       alert("Registration Failed");
     }
   }
@@ -23,14 +24,12 @@ export default function Register() {
       <h2>Register</h2>
 
       <form onSubmit={register}>
-        <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} required />
-
-        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} required />
-
+        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <button type="submit">Register</button>
       </form>
 
-      <p onClick={() => navigate("/login")}>Already Have Account?</p>
+      <p style={{cursor:"pointer", color:"blue"}} onClick={() => navigate("/login")}>Already Have Account?</p>
     </div>
   );
 }

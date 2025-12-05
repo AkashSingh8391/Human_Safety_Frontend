@@ -18,7 +18,7 @@ export default function TrackPage() {
 
   const [myPos, setMyPos] = useState(null);
 
-  // *** Fix: Validate SOS coordinates ***
+  // *** Validate SOS coordinates ***
   const isValid = (val) => typeof val === "number" && !isNaN(val);
 
   if (!isValid(sosLat) || !isValid(sosLng)) {
@@ -57,9 +57,8 @@ export default function TrackPage() {
 
         {/* Path between SOS and viewer */}
         {myPos && (
-  <Polyline positions={[[sosLat, sosLng], myPos]} />
-)}
-
+          <Polyline positions={[[sosLat, sosLng], myPos]} />
+        )}
       </MapContainer>
     </div>
   );
