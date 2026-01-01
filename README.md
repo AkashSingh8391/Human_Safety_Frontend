@@ -1,20 +1,61 @@
-<<<<<<< HEAD
-# React + Vite
+🌐 Human Safety System – Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React-based frontend for the Human Safety System
 
-Currently, two official plugins are available:
+Provides role-based UI for Victim Dashboard(Civil user)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Integrates interactive maps for live location display and tracking
 
-## React Compiler
+🎯 Purpose
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Provide a user-friendly interface for emergency SOS alerts
 
-## Expanding the ESLint configuration
+Display real-time location data on an interactive map
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-=======
-# Human_Safety_Frontend
->>>>>>> 29edaba40f1322d0421252cca25507f0559d5708
+Enable police users to monitor alerts efficiently
+
+🧑‍🤝‍🧑 User Interfaces
+
+Civil User Interface
+
+Login & authentication
+
+View current location on map
+
+Send SOS alert with live coordinates
+
+Family User 
+
+View active SOS alerts on email
+
+Track user location on map
+
+🛠️ Tech Stack
+
+Framework: React.js
+
+Routing: React Router DOM
+
+API Communication: Axios
+
+Maps: Leaflet / Google Maps
+
+Authentication: JWT (via backend)
+
+Styling: CSS / Bootstrap
+
+🗺️ Map Features
+
+Interactive map display
+
+Location marker rendering
+
+Real-time coordinate visualization
+
+Route / movement tracking (optional)
+
+🔐 Security Handling
+
+JWT token stored in browser storage
+
+Token sent in API request headers
